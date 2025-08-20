@@ -1,0 +1,81 @@
+{
+  "name": "heic-preview",
+  "displayName": "HEIC Image Preview",
+  "description": "Preview HEIC images directly in VSCode",
+  "version": "1.0.0",
+  "publisher": "nuriyev",
+  "engines": {
+    "vscode": "^1.103.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "heic",
+    "heif",
+    "image",
+    "preview",
+    "viewer"
+  ],
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/heic-preview"
+  },
+  "activationEvents": [
+    "onCustomEditor:heicPreview.heicViewer"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "heicPreview.heicViewer",
+        "displayName": "HEIC Image Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.heic"
+          },
+          {
+            "filenamePattern": "*.heif"
+          },
+          {
+            "filenamePattern": "*.HEIC"
+          },
+          {
+            "filenamePattern": "*.HEIF"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "heicPreview.openPreview",
+        "title": "Open HEIC Preview"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/vscode": "^1.103.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.9.2",
+    "vsce": "^2.15.0",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "heic-convert": "^2.1.0",
+    "sharp": "^0.34.3"
+  }
+}
