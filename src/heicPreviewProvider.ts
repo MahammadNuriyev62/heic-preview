@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as path from "path";
 import * as fs from "fs";
 
 const heicConvert = require("heic-convert");
@@ -78,185 +77,105 @@ export class HeicPreviewProvider
   }
 
   private getHtmlForWebview(webview: vscode.Webview): string {
-    return `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>HEIC Image Preview</title>
-            <style>
-                body {
-                    margin: 0;
-                    padding: 20px;
-                    background: var(--vscode-editor-background);
-                    color: var(--vscode-editor-foreground);
-                    font-family: var(--vscode-font-family);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                }
-                
-                #container {
-                    max-width: 100%;
-                    text-align: center;
-                }
-                
-                #image {
-                    max-width: 100%;
-                    height: auto;
-                    border: 1px solid var(--vscode-panel-border);
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                }
-                
-                #metadata {
-                    margin-top: 20px;
-                    padding: 10px;
-                    background: var(--vscode-editor-inactiveSelectionBackground);
-                    border-radius: 4px;
-                    text-align: left;
-                    display: inline-block;
-                }
-                
-                #metadata h3 {
-                    margin-top: 0;
-                    color: var(--vscode-editor-foreground);
-                }
-                
-                #metadata p {
-                    margin: 5px 0;
-                    color: var(--vscode-descriptionForeground);
-                }
-                
-                #loading {
-                    padding: 20px;
-                    font-size: 16px;
-                }
-                
-                #error {
-                    color: var(--vscode-errorForeground);
-                    padding: 20px;
-                    background: var(--vscode-inputValidation-errorBackground);
-                    border: 1px solid var(--vscode-inputValidation-errorBorder);
-                    border-radius: 4px;
-                }
-                
-                .zoom-controls {
-                    margin: 20px 0;
-                }
-                
-                button {
-                    background: var(--vscode-button-background);
-                    color: var(--vscode-button-foreground);
-                    border: none;
-                    padding: 6px 14px;
-                    margin: 0 5px;
-                    cursor: pointer;
-                    border-radius: 2px;
-                }
-                
-                button:hover {
-                    background: var(--vscode-button-hoverBackground);
-                }
-            </style>
-        </head>
-        <body>
-            <div id="container">
-                <div id="loading">Loading HEIC image...</div>
-                <div id="error" style="display: none;"></div>
-                <div id="preview" style="display: none;">
-                    <div class="zoom-controls">
-                        <button onclick="zoomIn()">Zoom In</button>
-                        <button onclick="zoomOut()">Zoom Out</button>
-                        <button onclick="resetZoom()">Reset</button>
-                        <button onclick="fitToWindow()">Fit to Window</button>
-                    </div>
-                    <img id="image" />
-                    <div id="metadata"></div>
-                </div>
-            </div>
-            
-            <script>
-                const vscode = acquireVsCodeApi();
-                let currentZoom = 1;
-                
-                window.addEventListener('message', event => {
-                    const message = event.data;
-                    
-                    switch (message.type) {
-                        case 'update':
-                            displayImage(message.image, message.metadata);
-                            break;
-                        case 'error':
-                            showError(message.message);
-                            break;
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIC Preview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+        }
+        #image-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #image-container img {
+            max-width: 100%;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            border: 1px solid var(--vscode-editorWidget-border);
+            border-radius: 4px;
+        }
+        #metadata {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        #metadata h3 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        #metadata ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #metadata li {
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: var(--vscode-editorHoverWidget-background);
+            border: 1px solid var(--vscode-editorHoverWidget-border);
+            border-radius: 4px;
+        }
+        #error {
+            color: var(--vscode-errorForeground);
+            text-align: center;
+            font-weight: bold;
+        }
+        #loading {
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Loading HEIC image...</div>
+    <div id="image-container" style="display: none;"></div>
+    <div id="metadata" style="display: none;"></div>
+    <div id="error" style="display: none;"></div>
+
+    <script>
+        (function() {
+            const vscode = acquireVsCodeApi();
+            window.addEventListener('message', event => {
+                const message = event.data;
+                const loading = document.getElementById('loading');
+                const imageContainer = document.getElementById('image-container');
+                const metadataDiv = document.getElementById('metadata');
+                const errorDiv = document.getElementById('error');
+
+                loading.style.display = 'none';
+
+                if (message.type === 'update') {
+                    imageContainer.innerHTML = \`<img src="\${message.image}" alt="HEIC Image Preview">\`;
+                    imageContainer.style.display = 'block';
+
+                    let metaHtml = '<h3>Image Metadata</h3><ul>';
+                    for (let key in message.metadata) {
+                        let value = message.metadata[key];
+                        if (key === 'size') {
+                            value = \`\${(value / 1024).toFixed(2)} KB\`;
+                        }
+                        metaHtml += \`<li><strong>\${key.charAt(0).toUpperCase() + key.slice(1)}:</strong> \${value}</li>\`;
                     }
-                });
-                
-                function displayImage(imageSrc, metadata) {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('error').style.display = 'none';
-                    document.getElementById('preview').style.display = 'block';
-                    
-                    const img = document.getElementById('image');
-                    img.src = imageSrc;
-                    
-                    if (metadata) {
-                        const metadataHtml = \`
-                            <h3>Image Information</h3>
-                            <p><strong>Dimensions:</strong> \${metadata.width} × \${metadata.height} pixels</p>
-                            <p><strong>Format:</strong> \${metadata.format}</p>
-                            <p><strong>File Size:</strong> \${formatBytes(metadata.size)}</p>
-                            <p><strong>Channels:</strong> \${metadata.channels}</p>
-                            \${metadata.density ? \`<p><strong>Density:</strong> \${metadata.density} DPI</p>\` : ''}
-                        \`;
-                        document.getElementById('metadata').innerHTML = metadataHtml;
-                    }
+                    metaHtml += '</ul>';
+                    metadataDiv.innerHTML = metaHtml;
+                    metadataDiv.style.display = 'block';
+                } else if (message.type === 'error') {
+                    errorDiv.innerHTML = \`<p>\${message.message}</p>\`;
+                    errorDiv.style.display = 'block';
                 }
-                
-                function showError(message) {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('preview').style.display = 'none';
-                    document.getElementById('error').style.display = 'block';
-                    document.getElementById('error').textContent = message;
-                }
-                
-                function formatBytes(bytes) {
-                    if (bytes === 0) return '0 Bytes';
-                    const k = 1024;
-                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                    const i = Math.floor(Math.log(bytes) / Math.log(k));
-                    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-                }
-                
-                function zoomIn() {
-                    currentZoom *= 1.2;
-                    applyZoom();
-                }
-                
-                function zoomOut() {
-                    currentZoom *= 0.8;
-                    applyZoom();
-                }
-                
-                function resetZoom() {
-                    currentZoom = 1;
-                    applyZoom();
-                }
-                
-                function fitToWindow() {
-                    const img = document.getElementById('image');
-                    img.style.transform = '';
-                    img.style.maxWidth = '100%';
-                    currentZoom = 1;
-                }
-                
-                function applyZoom() {
-                    const img = document.getElementById('image');
-                    img.style.transform = \`scale(\${currentZoom})\`;
-                    img.style.maxWidth = 'none';
-                }
-            </script>
-        </body>
-        </html>`;
+            });
+        })();
+    </script>
+</body>
+</html>
+    `;
   }
 }

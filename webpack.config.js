@@ -1,4 +1,5 @@
 const path = require("path");
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   target: "node",
@@ -34,4 +35,25 @@ module.exports = {
   infrastructureLogging: {
     level: "log",
   },
+  plugins: [
+    // Copy node_modules to dist
+    new CopyPlugin({
+      patterns: [
+        {
+          from: "node_modules/heic-convert",
+          to: "node_modules/heic-convert",
+        },
+        {
+          from: "node_modules/sharp",
+          to: "node_modules/sharp",
+        },
+        // Include sharp's binary dependencies
+        {
+          from: "node_modules/@img",
+          to: "node_modules/@img",
+          noErrorOnMissing: true,
+        },
+      ],
+    }),
+  ],
 };
