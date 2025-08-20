@@ -81,30 +81,458 @@ export class HeicPreviewProvider
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HEIC Preview</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin:0; padding:20px; background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); }
-  #image-container { text-align:center; margin-bottom:20px; }
-  #image-container img { max-width:100%; max-height:80vh; width:auto; height:auto; border:1px solid var(--vscode-editorWidget-border); border-radius:4px; }
-  #metadata { max-width:600px; margin:0 auto; }
-  #metadata h3 { margin-top:0; font-size:1.2em; }
-  #metadata ul { list-style:none; padding:0; }
-  #metadata li { margin-bottom:8px; padding:8px; background: var(--vscode-editorHoverWidget-background); border:1px solid var(--vscode-editorHoverWidget-border); border-radius:4px; }
-  #error { color: var(--vscode-errorForeground); text-align:center; font-weight:bold; }
-  #loading { text-align:center; font-style:italic; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background: var(--vscode-editor-background); 
+    color: var(--vscode-editor-foreground); 
+    overflow: hidden;
+    height: 100vh;
+  }
+  
+  #toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: var(--vscode-editorWidget-background);
+    border-bottom: 1px solid var(--vscode-editorWidget-border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 10px;
+    z-index: 1000;
+  }
+  
+  #toolbar button {
+    padding: 5px 10px;
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  #toolbar button:hover {
+    background: var(--vscode-button-hoverBackground);
+  }
+  
+  #zoom-info {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+  }
+
+  #image-viewer {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 200px;
+    overflow: hidden;
+    cursor: grab;
+    background: var(--vscode-editor-background);
+  }
+  
+  #image-viewer.dragging {
+    cursor: grabbing;
+  }
+  
+  #image-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  
+  #image-container img {
+    max-width: none;
+    max-height: none;
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 4px;
+    transition: transform 0.1s ease-out;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  
+  #metadata {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background: var(--vscode-editorWidget-background);
+    border-top: 1px solid var(--vscode-editorWidget-border);
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  #metadata h3 { 
+    margin-top: 0; 
+    font-size: 1.2em; 
+  }
+  
+  #metadata ul { 
+    list-style: none; 
+    padding: 0; 
+  }
+  
+  #metadata li { 
+    margin-bottom: 8px; 
+    padding: 8px; 
+    background: var(--vscode-editorHoverWidget-background); 
+    border: 1px solid var(--vscode-editorHoverWidget-border); 
+    border-radius: 4px; 
+  }
+  
+  #error { 
+    color: var(--vscode-errorForeground); 
+    text-align: center; 
+    font-weight: bold; 
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  #loading { 
+    text-align: center; 
+    font-style: italic; 
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 </style>
 </head>
 <body>
+  <div id="toolbar" style="display:none;">
+    <button id="rotate-left">↺ Rotate Left</button>
+    <button id="rotate-right">↻ Rotate Right</button>
+    <button id="zoom-in">🔍+ Zoom In</button>
+    <button id="zoom-out">🔍- Zoom Out</button>
+    <button id="zoom-fit">⚏ Fit to Screen</button>
+    <button id="zoom-100">1:1 Actual Size</button>
+    <span id="zoom-info">100%</span>
+  </div>
+  
   <div id="loading">Loading HEIC image...</div>
-  <div id="image-container" style="display:none;"></div>
+  
+  <div id="image-viewer" style="display:none;">
+    <div id="image-container"></div>
+  </div>
+  
   <div id="metadata" style="display:none;"></div>
   <div id="error" style="display:none;"></div>
 
   <script>
     (function () {
       const loading = document.getElementById('loading');
+      const toolbar = document.getElementById('toolbar');
+      const imageViewer = document.getElementById('image-viewer');
       const imageContainer = document.getElementById('image-container');
       const metadataDiv = document.getElementById('metadata');
       const errorDiv = document.getElementById('error');
+      const zoomInfo = document.getElementById('zoom-info');
 
+      // Transform state
+      let rotation = 0; // degrees
+      let scale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      
+      // Image and viewport dimensions
+      let imageWidth = 0;
+      let imageHeight = 0;
+      let viewportWidth = 0;
+      let viewportHeight = 0;
+      
+      // Interaction state
+      let isDragging = false;
+      let lastMouseX = 0;
+      let lastMouseY = 0;
+      let lastTouchDistance = 0;
+      let lastTouchCenterX = 0;
+      let lastTouchCenterY = 0;
+
+      let currentImage = null;
+
+      function updateTransform() {
+        if (!currentImage) return;
+        
+        const transform = \`translate(\${translateX}px, \${translateY}px) scale(\${scale}) rotate(\${rotation}deg)\`;
+        currentImage.style.transform = transform;
+        zoomInfo.textContent = \`\${Math.round(scale * 100)}%\`;
+      }
+
+      function fitToScreen() {
+        if (!currentImage) return;
+        
+        updateViewportSize();
+        
+        // Calculate the scale needed to fit the image
+        const rotatedWidth = rotation % 180 === 0 ? imageWidth : imageHeight;
+        const rotatedHeight = rotation % 180 === 0 ? imageHeight : imageWidth;
+        
+        const scaleX = viewportWidth / rotatedWidth;
+        const scaleY = viewportHeight / rotatedHeight;
+        scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond 100%
+        
+        // Center the image
+        translateX = 0;
+        translateY = 0;
+        
+        updateTransform();
+      }
+
+      function zoomToActualSize() {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+      }
+
+      function updateViewportSize() {
+        const rect = imageViewer.getBoundingClientRect();
+        viewportWidth = rect.width;
+        viewportHeight = rect.height;
+      }
+
+      function constrainPan() {
+        if (!currentImage) return;
+        
+        updateViewportSize();
+        
+        const rotatedWidth = rotation % 180 === 0 ? imageWidth : imageHeight;
+        const rotatedHeight = rotation % 180 === 0 ? imageHeight : imageWidth;
+        
+        const scaledWidth = rotatedWidth * scale;
+        const scaledHeight = rotatedHeight * scale;
+        
+        // Calculate max translation to keep image visible
+        const maxTranslateX = Math.max(0, (scaledWidth - viewportWidth) / 2);
+        const maxTranslateY = Math.max(0, (scaledHeight - viewportHeight) / 2);
+        
+        translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, translateX));
+        translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY));
+      }
+
+      // Event handlers
+      document.getElementById('rotate-left').addEventListener('click', () => {
+        rotation -= 90;
+        updateTransform();
+      });
+
+      document.getElementById('rotate-right').addEventListener('click', () => {
+        rotation += 90;
+        updateTransform();
+      });
+
+      document.getElementById('zoom-in').addEventListener('click', () => {
+        scale *= 1.25;
+        constrainPan();
+        updateTransform();
+      });
+
+      document.getElementById('zoom-out').addEventListener('click', () => {
+        scale /= 1.25;
+        constrainPan();
+        updateTransform();
+      });
+
+      document.getElementById('zoom-fit').addEventListener('click', fitToScreen);
+      document.getElementById('zoom-100').addEventListener('click', zoomToActualSize);
+
+      // Mouse wheel zoom
+      imageViewer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        
+        const rect = imageViewer.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - viewportWidth / 2;
+        const mouseY = e.clientY - rect.top - viewportHeight / 2;
+        
+        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = scale * zoomFactor;
+        
+        // Adjust translation to zoom towards mouse position
+        translateX = mouseX - (mouseX - translateX) * (newScale / scale);
+        translateY = mouseY - (mouseY - translateY) * (newScale / scale);
+        
+        scale = newScale;
+        constrainPan();
+        updateTransform();
+      });
+
+      // Mouse drag
+      imageViewer.addEventListener('mousedown', (e) => {
+        if (e.button === 0) { // Left mouse button
+          isDragging = true;
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+          imageViewer.classList.add('dragging');
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          const deltaX = e.clientX - lastMouseX;
+          const deltaY = e.clientY - lastMouseY;
+          
+          translateX += deltaX;
+          translateY += deltaY;
+          
+          constrainPan();
+          updateTransform();
+          
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        imageViewer.classList.remove('dragging');
+      });
+
+      // Touch events for mobile
+      imageViewer.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        
+        if (e.touches.length === 1) {
+          // Single touch - start dragging
+          isDragging = true;
+          lastMouseX = e.touches[0].clientX;
+          lastMouseY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+          // Two touches - start pinch zoom
+          isDragging = false;
+          const touch1 = e.touches[0];
+          const touch2 = e.touches[1];
+          
+          lastTouchDistance = Math.sqrt(
+            Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+          );
+          
+          lastTouchCenterX = (touch1.clientX + touch2.clientX) / 2;
+          lastTouchCenterY = (touch1.clientY + touch2.clientY) / 2;
+        }
+      });
+
+      imageViewer.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        
+        if (e.touches.length === 1 && isDragging) {
+          // Single touch drag
+          const deltaX = e.touches[0].clientX - lastMouseX;
+          const deltaY = e.touches[0].clientY - lastMouseY;
+          
+          translateX += deltaX;
+          translateY += deltaY;
+          
+          constrainPan();
+          updateTransform();
+          
+          lastMouseX = e.touches[0].clientX;
+          lastMouseY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+          // Pinch zoom
+          const touch1 = e.touches[0];
+          const touch2 = e.touches[1];
+          
+          const currentDistance = Math.sqrt(
+            Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+          );
+          
+          const currentCenterX = (touch1.clientX + touch2.clientX) / 2;
+          const currentCenterY = (touch1.clientY + touch2.clientY) / 2;
+          
+          if (lastTouchDistance > 0) {
+            const zoomFactor = currentDistance / lastTouchDistance;
+            const rect = imageViewer.getBoundingClientRect();
+            const centerX = currentCenterX - rect.left - viewportWidth / 2;
+            const centerY = currentCenterY - rect.top - viewportHeight / 2;
+            
+            const newScale = scale * zoomFactor;
+            
+            // Adjust translation to zoom towards touch center
+            translateX = centerX - (centerX - translateX) * (newScale / scale);
+            translateY = centerY - (centerY - translateY) * (newScale / scale);
+            
+            scale = newScale;
+            constrainPan();
+            updateTransform();
+          }
+          
+          lastTouchDistance = currentDistance;
+          lastTouchCenterX = currentCenterX;
+          lastTouchCenterY = currentCenterY;
+        }
+      });
+
+      imageViewer.addEventListener('touchend', (e) => {
+        if (e.touches.length === 0) {
+          isDragging = false;
+          lastTouchDistance = 0;
+        } else if (e.touches.length === 1) {
+          // Switch back to single touch mode
+          isDragging = true;
+          lastMouseX = e.touches[0].clientX;
+          lastMouseY = e.touches[0].clientY;
+          lastTouchDistance = 0;
+        }
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName.toLowerCase() === 'input') return;
+        
+        switch(e.key) {
+          case 'r':
+          case 'R':
+            rotation += 90;
+            updateTransform();
+            e.preventDefault();
+            break;
+          case '+':
+          case '=':
+            scale *= 1.25;
+            constrainPan();
+            updateTransform();
+            e.preventDefault();
+            break;
+          case '-':
+            scale /= 1.25;
+            constrainPan();
+            updateTransform();
+            e.preventDefault();
+            break;
+          case '0':
+            fitToScreen();
+            e.preventDefault();
+            break;
+          case '1':
+            zoomToActualSize();
+            e.preventDefault();
+            break;
+        }
+      });
+
+      // Window resize handler
+      window.addEventListener('resize', () => {
+        updateViewportSize();
+        constrainPan();
+        updateTransform();
+      });
+
+      // Message handler
       window.addEventListener('message', (event) => {
         const message = event.data;
         loading.style.display = 'none';
@@ -113,9 +541,27 @@ export class HeicPreviewProvider
           const img = new Image();
           img.src = message.image;
           img.onload = () => {
+            currentImage = img;
+            imageWidth = img.naturalWidth;
+            imageHeight = img.naturalHeight;
+            
             imageContainer.innerHTML = '';
             imageContainer.appendChild(img);
-            imageContainer.style.display = 'block';
+            
+            // Reset transform state
+            rotation = 0;
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            
+            // Show UI elements
+            toolbar.style.display = 'flex';
+            imageViewer.style.display = 'block';
+            
+            // Fit to screen initially
+            setTimeout(() => {
+              fitToScreen();
+            }, 10);
 
             const sizeKB = (message.metadata.size / 1024).toFixed(2) + ' KB';
             const meta = {
@@ -131,6 +577,8 @@ export class HeicPreviewProvider
               metaHtml += '<li><strong>' + key + ':</strong> ' + v + '</li>';
             }
             metaHtml += '</ul>';
+            metaHtml += '<p><strong>Controls:</strong> Mouse wheel or pinch to zoom, drag to pan, R to rotate, +/- to zoom, 0 to fit, 1 for actual size</p>';
+            
             metadataDiv.innerHTML = metaHtml;
             metadataDiv.style.display = 'block';
           };
