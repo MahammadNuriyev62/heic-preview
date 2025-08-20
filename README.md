@@ -5,7 +5,7 @@ Preview HEIC/HEIF images directly in Visual Studio Code without external tools.
 ## Features
 
 - 🖼️ Preview HEIC and HEIF images directly in VSCode
-- 🔍 Zoom controls (zoom in, zoom out, reset, fit to window)
+<!-- - 🔍 Zoom controls (zoom in, zoom out, reset, fit to window) -->
 - 📊 Display image metadata (dimensions, format, file size)
 - 🎨 Automatic conversion to JPEG for display
 - 🌙 Supports both light and dark themes
@@ -19,7 +19,7 @@ Preview HEIC/HEIF images directly in Visual Studio Code without external tools.
 
 ## Requirements
 
-- VSCode 1.74.0 or higher
+- VSCode 1.103.0 or higher
 - Node.js runtime
 
 ## Installation
@@ -31,8 +31,8 @@ Install from the VSCode Extensions Marketplace by searching for "HEIC Image Prev
 - Large HEIC files may take a moment to convert
 - Some HEIC variants may not be supported
 
-## Release Notes
+<!-- ## Release Notes
 
 ### 1.0.0
 
-Initial release with basic HEIC preview functionality.
+Initial release with basic HEIC preview functionality. -->
