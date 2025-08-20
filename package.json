@@ -2,7 +2,7 @@
   "name": "heic-preview",
   "displayName": "HEIC Image Preview",
   "description": "Preview HEIC images directly in VSCode",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "publisher": "nuriyev",
   "engines": {
     "vscode": "^1.102.0"
