@@ -11,8 +11,9 @@ module.exports = {
     libraryTarget: "commonjs2",
   },
   externals: {
+    // vscode is always external
     vscode: "commonjs vscode",
-    "heic-convert": "commonjs heic-convert",
+    // sharp is a native module, so it's best to keep it external
     sharp: "commonjs sharp",
   },
   resolve: {
@@ -36,13 +37,9 @@ module.exports = {
     level: "log",
   },
   plugins: [
-    // Copy node_modules to dist
+    // Copy only the node_modules that need to be external
     new CopyPlugin({
       patterns: [
-        {
-          from: "node_modules/heic-convert",
-          to: "node_modules/heic-convert",
-        },
         {
           from: "node_modules/sharp",
           to: "node_modules/sharp",

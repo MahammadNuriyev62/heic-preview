@@ -61,7 +61,8 @@
     "compile": "webpack --mode production",
     "watch": "webpack --mode development --watch",
     "package": "vsce package",
-    "publish": "vsce publish"
+    "publish": "vsce publish",
+    "publish-minor": "vsce publish minor"
   },
   "author": "",
   "license": "ISC",
