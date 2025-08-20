@@ -11,9 +11,8 @@ module.exports = {
     libraryTarget: "commonjs2",
   },
   externals: {
-    // vscode is always external
     vscode: "commonjs vscode",
-    // sharp is a native module, so it's best to keep it external
+    "heic-convert": "commonjs heic-convert",
     sharp: "commonjs sharp",
   },
   resolve: {
@@ -36,21 +35,4 @@ module.exports = {
   infrastructureLogging: {
     level: "log",
   },
-  plugins: [
-    // Copy only the node_modules that need to be external
-    new CopyPlugin({
-      patterns: [
-        {
-          from: "node_modules/sharp",
-          to: "node_modules/sharp",
-        },
-        // Include sharp's binary dependencies
-        {
-          from: "node_modules/@img",
-          to: "node_modules/@img",
-          noErrorOnMissing: true,
-        },
-      ],
-    }),
-  ],
 };
