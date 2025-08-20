@@ -93,27 +93,30 @@ export class HeicPreviewProvider
   
   #toolbar {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50px;
+    top: 10px;
+    left: 10px;
     background: var(--vscode-editorWidget-background);
-    border-bottom: 1px solid var(--vscode-editorWidget-border);
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 4px;
     display: flex;
     align-items: center;
-    padding: 0 20px;
-    gap: 10px;
+    padding: 4px;
+    gap: 2px;
     z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
   }
   
   #toolbar button {
-    padding: 5px 10px;
+    padding: 4px 6px;
     background: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
     border: 1px solid var(--vscode-button-border);
-    border-radius: 3px;
+    border-radius: 2px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
+    min-width: 24px;
+    height: 24px;
   }
   
   #toolbar button:hover {
@@ -121,17 +124,19 @@ export class HeicPreviewProvider
   }
   
   #zoom-info {
-    margin-left: auto;
-    font-size: 12px;
+    margin-left: 4px;
+    font-size: 11px;
     color: var(--vscode-descriptionForeground);
+    min-width: 35px;
+    padding: 0 4px;
   }
 
   #image-viewer {
     position: absolute;
-    top: 50px;
+    top: 0;
     left: 0;
     right: 0;
-    bottom: 200px;
+    bottom: 0;
     overflow: hidden;
     cursor: grab;
     background: var(--vscode-editor-background);
@@ -162,32 +167,45 @@ export class HeicPreviewProvider
   
   #metadata {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 200px;
+    bottom: 10px;
+    right: 10px;
+    max-width: 280px;
     background: var(--vscode-editorWidget-background);
-    border-top: 1px solid var(--vscode-editorWidget-border);
-    padding: 20px;
-    overflow-y: auto;
+    border: 1px solid var(--vscode-editorWidget-border);
+    border-radius: 4px;
+    padding: 8px;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
+    font-size: 11px;
+    opacity: 0.95;
   }
   
   #metadata h3 { 
-    margin-top: 0; 
-    font-size: 1.2em; 
+    margin: 0 0 6px 0; 
+    font-size: 12px; 
   }
   
   #metadata ul { 
     list-style: none; 
     padding: 0; 
+    margin: 0;
   }
   
   #metadata li { 
-    margin-bottom: 8px; 
-    padding: 8px; 
+    margin-bottom: 2px; 
+    padding: 3px 4px; 
     background: var(--vscode-editorHoverWidget-background); 
     border: 1px solid var(--vscode-editorHoverWidget-border); 
-    border-radius: 4px; 
+    border-radius: 2px; 
+    font-size: 10px;
+  }
+  
+  #metadata .controls {
+    margin: 6px 0 0 0; 
+    font-size: 9px; 
+    color: var(--vscode-descriptionForeground);
+    line-height: 1.2;
   }
   
   #error { 
@@ -212,12 +230,12 @@ export class HeicPreviewProvider
 </head>
 <body>
   <div id="toolbar" style="display:none;">
-    <button id="rotate-left">↺ Rotate Left</button>
-    <button id="rotate-right">↻ Rotate Right</button>
-    <button id="zoom-in">🔍+ Zoom In</button>
-    <button id="zoom-out">🔍- Zoom Out</button>
-    <button id="zoom-fit">⚏ Fit to Screen</button>
-    <button id="zoom-100">1:1 Actual Size</button>
+    <button id="rotate-left">↺</button>
+    <button id="rotate-right">↻</button>
+    <button id="zoom-in">+</button>
+    <button id="zoom-out">-</button>
+    <button id="zoom-fit">Fit</button>
+    <button id="zoom-100">1:1</button>
     <span id="zoom-info">100%</span>
   </div>
   
@@ -577,7 +595,7 @@ export class HeicPreviewProvider
               metaHtml += '<li><strong>' + key + ':</strong> ' + v + '</li>';
             }
             metaHtml += '</ul>';
-            metaHtml += '<p><strong>Controls:</strong> Mouse wheel or pinch to zoom, drag to pan, R to rotate, +/- to zoom, 0 to fit, 1 for actual size</p>';
+            metaHtml += '<div class="controls"><strong>Controls:</strong> Wheel/pinch zoom, drag pan, R rotate, +/- zoom, 0 fit, 1 actual</div>';
             
             metadataDiv.innerHTML = metaHtml;
             metadataDiv.style.display = 'block';
