@@ -13,7 +13,6 @@ module.exports = {
   externals: {
     vscode: "commonjs vscode",
     "heic-convert": "commonjs heic-convert",
-    sharp: "commonjs sharp",
   },
   resolve: {
     extensions: [".ts", ".js"],
