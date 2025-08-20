@@ -20,11 +20,8 @@
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/heic-preview"
+    "url": "https://github.com/MahammadNuriyev62/heic-preview"
   },
-  "activationEvents": [
-    "onCustomEditor:heicPreview.heicViewer"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "customEditors": [
