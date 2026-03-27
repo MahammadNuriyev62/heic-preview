@@ -282,7 +282,10 @@ export class HeicPreviewProvider
 
       function updateTransform() {
         if (!currentImage) return;
-        
+
+        scale = Math.max(0.01, Math.min(50, scale));
+        rotation = ((rotation % 360) + 360) % 360;
+
         const transform = \`translate(\${translateX}px, \${translateY}px) scale(\${scale}) rotate(\${rotation}deg)\`;
         currentImage.style.transform = transform;
         zoomInfo.textContent = \`\${Math.round(scale * 100)}%\`;
@@ -605,7 +608,7 @@ export class HeicPreviewProvider
             errorDiv.style.display = 'block';
           };
         } else if (message.type === 'error') {
-          errorDiv.innerHTML = '<p>' + message.message + '</p>';
+          errorDiv.textContent = message.message;
           errorDiv.style.display = 'block';
         }
       });
