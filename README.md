@@ -53,7 +53,7 @@ Preview HEIC/HEIF images directly in Visual Studio Code with powerful viewing co
 
 ## Installation
 
-Install from the VSCode Extensions Marketplace by searching for "HEIC Image Preview".
+Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nuriyev.heic-preview), or search for "HEIC Image Preview" in the Extensions view (`Ctrl+Shift+X`).
 
 ## Supported File Types
 
