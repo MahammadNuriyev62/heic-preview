@@ -181,9 +181,32 @@ export class HeicPreviewProvider
     opacity: 0.95;
   }
   
-  #metadata h3 { 
-    margin: 0 0 6px 0; 
-    font-size: 12px; 
+  #metadata h3 {
+    margin: 0 0 6px 0;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #metadata h3::after {
+    content: '▾';
+    font-size: 10px;
+    transition: transform 0.15s ease;
+  }
+
+  #metadata.collapsed h3 {
+    margin-bottom: 0;
+  }
+
+  #metadata.collapsed h3::after {
+    transform: rotate(-90deg);
+  }
+
+  #metadata.collapsed .meta-content {
+    display: none;
   }
   
   #metadata ul { 
@@ -546,6 +569,13 @@ export class HeicPreviewProvider
         }
       });
 
+      // Metadata collapse toggle
+      metadataDiv.addEventListener('click', (e) => {
+        if (e.target.tagName === 'H3' || e.target.parentElement.tagName === 'H3') {
+          metadataDiv.classList.toggle('collapsed');
+        }
+      });
+
       // Window resize handler
       window.addEventListener('resize', () => {
         updateViewportSize();
@@ -592,13 +622,13 @@ export class HeicPreviewProvider
               size: sizeKB
             };
 
-            let metaHtml = '<h3>Image Metadata</h3><ul>';
+            let metaHtml = '<h3>Image Metadata</h3><div class="meta-content"><ul>';
             for (const [k, v] of Object.entries(meta)) {
               const key = k.charAt(0).toUpperCase() + k.slice(1);
               metaHtml += '<li><strong>' + key + ':</strong> ' + v + '</li>';
             }
             metaHtml += '</ul>';
-            metaHtml += '<div class="controls"><strong>Controls:</strong> Wheel/pinch zoom, drag pan, R rotate, +/- zoom, 0 fit, 1 actual</div>';
+            metaHtml += '<div class="controls"><strong>Controls:</strong> Wheel/pinch zoom, drag pan, R rotate, +/- zoom, 0 fit, 1 actual</div></div>';
             
             metadataDiv.innerHTML = metaHtml;
             metadataDiv.style.display = 'block';

@@ -50,12 +50,12 @@ Preview HEIC/HEIF images directly in Visual Studio Code with powerful viewing co
 
 ## Requirements
 
-- VSCode 1.102.0 or higher
+- VSCode 1.75.0 or higher (also works in Cursor, Windsurf, and other VS Code forks)
 - Node.js runtime
 
 ## Installation
 
-Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nuriyev.heic-preview), or search for "HEIC Image Preview" in the Extensions view (`Ctrl+Shift+X`).
+Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nuriyev.heic-preview) or [Open VSX Registry](https://open-vsx.org/extension/nuriyev/heic-preview), or search for "HEIC Image Preview" in the Extensions view (`Ctrl+Shift+X`).
 
 ## Supported File Types
 
@@ -74,3 +74,7 @@ Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/item
 - **Quick navigation**: Use keyboard shortcuts for faster workflow
 - **Mobile viewing**: Fully supports touch gestures on tablets and touch-enabled laptops
 - **Large images**: Use "Fit to Screen" for initial overview, then zoom to examine details
+
+## Feedback & Issues
+
+Found a bug or have a feature request? [Open an issue on GitHub](https://github.com/MahammadNuriyev62/heic-preview/issues) — I'm online pretty much 24/7 and will get back to you quickly.
