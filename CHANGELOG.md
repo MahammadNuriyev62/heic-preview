@@ -1,10 +1,13 @@
 # Changelog
 
-## [2.3.1] - 2026-04-08
+## [2.4.0] - 2026-04-08
+
+### Added
+- Collapsible metadata panel (click "Image Metadata" header to toggle)
+- Published to Open VSX Registry
 
 ### Changed
 - Lowered minimum VS Code version to 1.75.0 for compatibility with Cursor, Windsurf, and other forks
-- Published to Open VSX Registry
 
 ## [2.2.0] - 2025-08-26
 

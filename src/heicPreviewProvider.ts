@@ -191,17 +191,18 @@ export class HeicPreviewProvider
     justify-content: space-between;
   }
 
-  #metadata h3::after {
-    content: '▾';
-    font-size: 10px;
+  #metadata h3 .chevron {
+    width: 12px;
+    height: 12px;
     transition: transform 0.15s ease;
+    flex-shrink: 0;
   }
 
   #metadata.collapsed h3 {
     margin-bottom: 0;
   }
 
-  #metadata.collapsed h3::after {
+  #metadata.collapsed h3 .chevron {
     transform: rotate(-90deg);
   }
 
@@ -571,7 +572,8 @@ export class HeicPreviewProvider
 
       // Metadata collapse toggle
       metadataDiv.addEventListener('click', (e) => {
-        if (e.target.tagName === 'H3' || e.target.parentElement.tagName === 'H3') {
+        const el = e.target;
+        if (el.tagName === 'H3' || el.closest('h3')) {
           metadataDiv.classList.toggle('collapsed');
         }
       });
@@ -622,7 +624,7 @@ export class HeicPreviewProvider
               size: sizeKB
             };
 
-            let metaHtml = '<h3>Image Metadata</h3><div class="meta-content"><ul>';
+            let metaHtml = '<h3>Image Metadata <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></h3><div class="meta-content"><ul>';
             for (const [k, v] of Object.entries(meta)) {
               const key = k.charAt(0).toUpperCase() + k.slice(1);
               metaHtml += '<li><strong>' + key + ':</strong> ' + v + '</li>';
