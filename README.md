@@ -2,6 +2,8 @@
 
 Preview HEIC/HEIF images directly in Visual Studio Code with powerful viewing controls and no external tools required.
 
+[![Downloads](https://img.shields.io/badge/installs-1.7k-blue?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=nuriyev.heic-preview)
+
 ## Features
 
 - 🖼️ **Preview HEIC and HEIF images** directly in VSCode
